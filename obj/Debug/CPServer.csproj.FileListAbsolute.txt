@@ -6,3 +6,7 @@ F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\obj\Debug\CP
 F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\bin\Debug\CPServer.dll
 F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\bin\Debug\CPServer.pdb
 F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\obj\Debug\CPServer.dll
+E:\充电桩\ChargePile\chargePileServerLib\bin\Debug\CPServer.dll
+E:\充电桩\ChargePile\chargePileServerLib\bin\Debug\CPServer.pdb
+E:\充电桩\ChargePile\chargePileServerLib\obj\Debug\CPServer.dll
+E:\充电桩\ChargePile\chargePileServerLib\obj\Debug\CPServer.pdb
