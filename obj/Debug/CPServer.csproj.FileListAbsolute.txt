@@ -2,3 +2,7 @@ E:\充电桩\充电桩C#模拟程序\服务器库20160428-V0.0\cpServer\bin\Debu
 E:\充电桩\充电桩C#模拟程序\服务器库20160428-V0.0\cpServer\bin\Debug\cpServer.pdb
 E:\充电桩\充电桩C#模拟程序\服务器库20160428-V0.0\cpServer\obj\Debug\cpServer.dll
 E:\充电桩\充电桩C#模拟程序\服务器库20160428-V0.0\cpServer\obj\Debug\cpServer.pdb
+F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\obj\Debug\CPServer.pdb
+F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\bin\Debug\CPServer.dll
+F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\bin\Debug\CPServer.pdb
+F:\chargePile_Project\ChargePile\服务器库20160428-V0.0\cpServer\obj\Debug\CPServer.dll
