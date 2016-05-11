@@ -277,22 +277,121 @@ namespace CPServer
         private static int myProt = 8885;   //端口
         static Socket serverSocket;
         public chargePileDataPacketList() {
-            IPAddress ip = IPAddress.Parse("127.0.0.1");
-            serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(ip, myProt));  //绑定IP地址：端口
-            serverSocket.Listen(100);    //设定最多100个排队连接请求
-            // 通过Clientsoket发送数据
-            //clientSocket = serverSocket.Accept();
-            Thread myThread = new Thread(ListenClientConnect);
-            myThread.Start();/**/
 
-            
+            try {
+                IPAddress ip = IPAddress.Parse("127.0.0.1");
+                serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                serverSocket.Bind(new IPEndPoint(ip, myProt));  //绑定IP地址：端口
+                serverSocket.Listen(100);    //设定最多100个排队连接请求
+                // 通过Clientsoket发送数据
+                //clientSocket = serverSocket.Accept();
+
+                Thread myThread = new Thread(ListenClientConnect);
+                myThread.Start();/**/
+
+                //serverSocket.BeginAccept(new AsyncCallback(ListenClientConnect), null);
+
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
 
             //Thread myThread1 = new Thread(addList);
             //myThread1.Start(cpData);
 
             //Thread getInfoThread = new Thread(getCPInfo);
             //getInfoThread.Start(cpDataPacket);
+        }
+
+        private void ListenClientConnect(IAsyncResult ar) {
+            try {
+                Socket clientSocket = serverSocket.EndAccept(ar);
+                //完成接收后，开始等待后续的请求接入
+                serverSocket.BeginAccept(new AsyncCallback(ReceiveMessage), null);
+                //一旦建立连接，那么开始接收客户端发送的信息
+                clientSocket.BeginReceive(result, 0, result.Length, SocketFlags.None,
+                    new AsyncCallback(ReceiveMessage), clientSocket);
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message + " OnTCPAccept");
+            }
+        }
+        private void ReceiveMessage(IAsyncResult ar) {
+            Socket clientSocket = (Socket)ar.AsyncState;
+            int port = ((System.Net.IPEndPoint)clientSocket.RemoteEndPoint).Port;
+            Console.WriteLine("创建新的线程来接收数据，端口号为：" + port);
+            //while (true) {
+                try { // 通过clientSocket接收数据
+                    Thread.Sleep(100);
+                    if (clientSocket == null) {
+                        return;
+                    }
+                    clientSocketFlg = true;
+                    Console.WriteLine("--------进入接收函数等待数据----------" + port);
+                    int receiveNumber = clientSocket.EndReceive(ar);
+                    Console.WriteLine(receiveNumber);
+                    if (receiveNumber <= 0) return;
+                    byte[] tempArray = new byte[receiveNumber];
+                    try {
+                        for (int i = 0; i < receiveNumber; i++) {
+                            tempArray[i] = result[i];
+                        }
+                    } catch (Exception ex) {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("数组赋值错误！");
+                    }
+                    chargePileDataPacket cpdeviceDataPacket = new chargePileDataPacket();
+                    cpdeviceDataPacket.chargePileData = cpdeviceDataPacket.chargePileData.packageParser(tempArray, receiveNumber);
+
+                    if (cpdeviceDataPacket.chargePileData != null) {
+                        Console.WriteLine("解析数据成功---机器地址为：" + cpData.chargePileData.cpAddress);
+
+                        //cpdeviceDataPacket.chargePileData = cpData.chargePileData;
+                        cpdeviceDataPacket.isActive = true;
+                        //cpdeviceDataPacket.chargePileIPAddress = ((System.Net.IPEndPoint)myClientSocket.RemoteEndPoint).Address;
+                        //cpdeviceDataPacket.chargePilePort = ((System.Net.IPEndPoint)myClientSocket.RemoteEndPoint).Port;
+                        cpdeviceDataPacket.chargePileMachineAddress = cpdeviceDataPacket.chargePileData.cpAddress;
+                        cpdeviceDataPacket.clientSocket = clientSocket;
+                        Console.WriteLine("cpdeviceDataPacket-address:" + cpdeviceDataPacket.chargePileData.cpAddress);
+
+                        Console.WriteLine("list length" + cpDataPacket.Count);
+                        if (false == updataDeviceList(cpdeviceDataPacket)) {
+                            cpDataPacket.Add(cpdeviceDataPacket);
+
+                            // 为每一个接收线程创建一个发送线程
+                            Thread getInfoThread = new Thread(SendInfoToCP);
+                            getInfoThread.Start(cpdeviceDataPacket);
+                            //Thread getInfoThread = new Thread(getCPInfo);
+                            //getInfoThread.Start(cpDataPacket);
+                            Console.WriteLine("enter add data!!!");
+                        }
+                        for (int i = 0; i < cpDataPacket.Count; i++) {
+                            Console.WriteLine("cpDataPacket-address:" + cpDataPacket[i].chargePileData.cpAddress);
+                        }
+                        //if (cpData.chargePileMachineAddress != cpData.chargePileData.cpAddress) {
+                        //    cpData.chargePileMachineAddress = cpData.chargePileData.cpAddress;
+
+                        //    if (false == updataDeviceList(cpData)) {
+                        //        Console.WriteLine("add myData to list！");
+                        //        cpDataPacket.Add(cpData);
+                        //    }
+                        //    cpData.isActive = true;
+                        //}
+                    }/**/
+                    //}
+
+                    //继续接收数据
+                    clientSocket.BeginReceive(result, 0, result.Length, SocketFlags.None,
+                                            new AsyncCallback(ReceiveMessage), clientSocket);
+                } catch (Exception ex) {
+                    Console.WriteLine(ex.Message);
+                    Console.WriteLine("ReceiveMessage");
+                    if (clientSocketFlg) {
+                        clientSocket = null;
+                        clientSocketFlg = false;
+                    }
+                    //Thread.CurrentThread.Abort();
+                }
+            //}
+
         }
         private void ListenClientConnect() {
             while (true) {
@@ -306,6 +405,7 @@ namespace CPServer
                 Thread.Sleep(100);
                 // 每次收到一个新的socket都会开启一个新线程
                 Thread receiveThread = new Thread(ReceiveMessage);
+                receiveThread.IsBackground = true;
                 receiveThread.Start(cpData.clientSocket);
             }
 
@@ -347,18 +447,16 @@ namespace CPServer
             Console.WriteLine("创建新的线程来接收数据，端口号为：" + port);
             while (true) {
                 try { // 通过clientSocket接收数据
-                    Thread.Sleep(100);
+                    
                     if (mySocket == null) {
                         continue;
                     }
                     clientSocketFlg = true;
                     Console.WriteLine("--------进入接收函数等待数据----------" + port);
-                    Thread.Sleep(2000);
-                    
+                    //Thread.Sleep(2000);
+                    //continue;
                     int receiveNumber = mySocket.Receive(result);
-                    
                     Console.WriteLine(receiveNumber);
-                    
                     if (receiveNumber == 0) {
                         continue;
                     }
@@ -399,15 +497,6 @@ namespace CPServer
                         for (int i = 0; i < cpDataPacket.Count; i++) {
                             Console.WriteLine("cpDataPacket-address:" + cpDataPacket[i].chargePileData.cpAddress);
                         }
-                        //if (cpData.chargePileMachineAddress != cpData.chargePileData.cpAddress) {
-                        //    cpData.chargePileMachineAddress = cpData.chargePileData.cpAddress;
-
-                        //    if (false == updataDeviceList(cpData)) {
-                        //        Console.WriteLine("add myData to list！");
-                        //        cpDataPacket.Add(cpData);
-                        //    }
-                        //    cpData.isActive = true;
-                        //}
                     }/**/
                     //}
                 } catch (Exception ex) {
@@ -417,8 +506,9 @@ namespace CPServer
                         mySocket = null;
                         clientSocketFlg = false;
                     }
-                    Thread.CurrentThread.Abort();
+                    //Thread.CurrentThread.Abort();
                 }
+                Thread.Sleep(1000);
             }
             
         }
@@ -439,19 +529,21 @@ namespace CPServer
                 CPSendDataPackage sendDataPack = new CPSendDataPackage();
                 byte[] sendData = sendDataPack.sendDataPackage(0x23, myData.chargePileMachineAddress);
                 Socket soc = myData.clientSocket;
-                soc.Send(sendData, sendData.Length, 0);
+                
+                
                 //this.sendDataToChargePile(0x23, myData);
                 //Thread.Sleep(100);
                 //this.sendDataToChargePile(0x25, myData);
                 //Thread.Sleep(100);
                 try {
-                    
+                    soc.Send(sendData, sendData.Length, 0);
                 } catch (Exception ex) {
-                    Console.WriteLine(ex.Message);
+                    //Console.WriteLine(ex.Message);
                     Console.WriteLine("发送数据错误！");
-                    Thread.CurrentThread.Abort();
+                    //Thread.CurrentThread.Abort();
+                    soc.Close();
                 }
-                Thread.Sleep(1000);
+                Thread.Sleep(3000);
             }
         }
         private void getCPInfo(object cpDataPacket) {

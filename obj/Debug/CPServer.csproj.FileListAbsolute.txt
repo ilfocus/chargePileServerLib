@@ -10,3 +10,4 @@ E:\充电桩\ChargePile\chargePileServerLib\bin\Debug\CPServer.dll
 E:\充电桩\ChargePile\chargePileServerLib\bin\Debug\CPServer.pdb
 E:\充电桩\ChargePile\chargePileServerLib\obj\Debug\CPServer.dll
 E:\充电桩\ChargePile\chargePileServerLib\obj\Debug\CPServer.pdb
+E:\充电桩\ChargePile\chargePileServerLib\obj\Debug\CPServer.csprojResolveAssemblyReference.cache
