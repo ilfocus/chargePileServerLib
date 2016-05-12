@@ -14,5 +14,10 @@ namespace CPServer
         public void addMessage() {
             Console.WriteLine("add a function!");
         }
+        public void addTestFuntion() {
+            Console.WriteLine("test github");
+        }
+
+
     }
 }
