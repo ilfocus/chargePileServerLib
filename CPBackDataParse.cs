@@ -120,6 +120,12 @@ namespace CPServer
                             this.cpGetStateData.cpChargePlug = arr[46];
                             this.cpGetStateData.cpSpace3 = arr[47];
                             this.cpGetStateData.cpCurrentState = arr[48];
+
+                            this.cpGetStateData.cpFaultH = arr[49];
+                            this.cpGetStateData.cpFaultL = arr[50];
+                            this.cpGetStateData.cpState = arr[51];
+                            this.cpGetStateData.cpComState = arr[52];
+
                             
                         } else {
                             this.cpGetStateData.cpGetStateExecuteResult = false;
@@ -703,6 +709,14 @@ namespace CPServer
     }
     public class CPGetState
     {
+        public enum CPCurrentState {
+            FaultState,
+            FreeState,
+            ChargeState,
+            ParkingState,
+            OrderState,
+            MainTainState
+        }
         public bool cpGetStateExecuteResult = false;
         // accurate to 2 decimal places
         public UInt32 cpVoltage = 0;
@@ -720,6 +734,71 @@ namespace CPServer
         public byte cpChargePlug = 0;    // 0x00:normal;0x01:fault
         public byte cpSpace3 = 0;        // space data
         public byte cpCurrentState = 0;  // 0x00:normal;0x01:fault
+
+        private byte _cpFaultH = 0;
+        private byte _cpFaultL = 0;
+
+        public byte cpState = 0;
+        public byte cpComState = 0;
+
+        public bool _cpInOverVol = false;
+        public bool cpOutOverVol = false;
+        public bool cpInUnderVol = false;
+        public bool cpOutUnderVol = false;
+
+        public bool cpInOverCur = false;
+        public bool cpOutOverCur = false;
+        public bool cpInUnderCur = false;
+        public bool cpOutUnderCur = false;
+
+        public bool cpTempHigh = false;
+        public bool cpOutShort = false;
+
+        
+        public CPCurrentState cpCurrentSta = CPCurrentState.FreeState;
+
+        private UInt16 _fault = 0;
+        private UInt16 fault {
+            get {
+                _fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
+                return _fault;
+            }
+            set {
+                //_fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
+                _fault = value;
+            }
+        }
+        public bool cpInOverVol {
+            get {
+                //fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
+                _cpInOverVol = checkBoxFault(fault,10);
+                return _cpInOverVol;
+            }
+            set {
+                _cpInOverVol = value;
+            }
+        }
+        public byte cpFaultH {
+            get {
+                return _cpFaultH;
+            }
+            set {
+                _cpFaultH = value;
+            }
+        }
+        public byte cpFaultL {
+            get {
+                return _cpFaultL;
+            }
+            set {
+                _cpFaultL = value;
+            }
+        }
+        private bool checkBoxFault(UInt16 data, int bit) {
+            return !((data & (1 << bit)) == 0);
+        }
+        
+
     }
     public class CPGetStartup
     {
