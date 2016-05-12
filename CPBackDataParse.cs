@@ -735,47 +735,131 @@ namespace CPServer
         public byte cpSpace3 = 0;        // space data
         public byte cpCurrentState = 0;  // 0x00:normal;0x01:fault
 
+        private byte _cpState = 0;
+        private CPCurrentState _cpCurrentSta = CPCurrentState.FreeState;
+
+        private byte _cpComState = 0; // commucation state
+
         private byte _cpFaultH = 0;
         private byte _cpFaultL = 0;
+        private bool _cpInOverVol = false;
+        private bool _cpOutOverVol = false;
+        private bool _cpInUnderVol = false;
+        private bool _cpOutUnderVol = false;
 
-        public byte cpState = 0;
-        public byte cpComState = 0;
+        private bool _cpInOverCur = false;
+        private bool _cpOutOverCur = false;
+        private bool _cpInUnderCur = false;
+        private bool _cpOutUnderCur = false;
 
-        public bool _cpInOverVol = false;
-        public bool cpOutOverVol = false;
-        public bool cpInUnderVol = false;
-        public bool cpOutUnderVol = false;
-
-        public bool cpInOverCur = false;
-        public bool cpOutOverCur = false;
-        public bool cpInUnderCur = false;
-        public bool cpOutUnderCur = false;
-
-        public bool cpTempHigh = false;
-        public bool cpOutShort = false;
-
-        
-        public CPCurrentState cpCurrentSta = CPCurrentState.FreeState;
-
+        private bool _cpTempHigh = false;
+        private bool _cpOutShort = false;
         private UInt16 _fault = 0;
+
+        #region 充电桩状态
+        public byte cpState {
+            set {
+                _cpState = value;
+                switch (_cpState) {
+                    case 0: { _cpCurrentSta = CPCurrentState.FaultState; break; }
+                    case 1: { _cpCurrentSta = CPCurrentState.FreeState; break; }
+                    case 2: { _cpCurrentSta = CPCurrentState.ChargeState; break; }
+                    case 3: { _cpCurrentSta = CPCurrentState.ParkingState; break; }
+                    case 4: { _cpCurrentSta = CPCurrentState.OrderState; break; }
+                    case 5: { _cpCurrentSta = CPCurrentState.MainTainState; break; }
+                    default: { break; };
+                }
+            }
+        }
+        private CPCurrentState cpCurrentSta {
+            get {
+                return _cpCurrentSta;
+            }
+        }
+        #endregion
+
+        #region 通信状态
+        public byte cpComState {
+            get {
+                return _cpComState;
+            }
+            set {
+                _cpComState = value;
+            }
+        }
+        #endregion
+
+        #region 故障值
         private UInt16 fault {
             get {
                 _fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
+                Console.WriteLine("get fault:" + _fault);
                 return _fault;
             }
             set {
-                //_fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
+                Console.WriteLine("set fault" + _fault);
                 _fault = value;
             }
         }
         public bool cpInOverVol {
             get {
-                //fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
-                _cpInOverVol = checkBoxFault(fault,10);
+                _cpInOverVol = checkBoxFault(fault,9);
                 return _cpInOverVol;
             }
-            set {
-                _cpInOverVol = value;
+        }
+        public bool cpOutOverVol
+        {
+            get {
+                _cpOutOverVol = checkBoxFault(fault,8);
+                return _cpOutOverVol;
+            }
+        }
+        public bool cpInUnderVol {
+            get {
+                _cpInUnderVol = checkBoxFault(fault, 7);
+                return _cpInUnderVol;
+            }
+        }
+        public bool cpOutUnderVol {
+            get {
+                _cpOutUnderVol = checkBoxFault(fault,6);
+                return _cpOutUnderVol;
+            }
+        }
+        public bool cpInOverCur {
+            get {
+                _cpInOverCur = checkBoxFault(fault, 5);
+                return _cpInOverCur;
+            }
+        }
+        public bool cpOutOverCur {
+            get {
+                _cpOutOverCur = checkBoxFault(fault, 4);
+                return _cpOutOverCur;
+            }
+        }
+        public bool cpInUnderCur {
+            get {
+                _cpInUnderCur = checkBoxFault(fault, 3);
+                return _cpInUnderCur;
+            }
+        }
+        public bool cpOutUnderCur {
+            get {
+                _cpOutUnderCur = checkBoxFault(fault, 2);
+                return _cpOutUnderCur;
+            }
+        }
+        public bool cpTempHigh {
+            get {
+                _cpTempHigh = checkBoxFault(fault, 1);
+                return _cpTempHigh;
+            }
+        }
+        public bool cpOutShort {
+            get {
+                _cpOutShort = checkBoxFault(fault, 0);
+                return _cpOutShort;
             }
         }
         public byte cpFaultH {
@@ -794,10 +878,11 @@ namespace CPServer
                 _cpFaultL = value;
             }
         }
+        #endregion
+
         private bool checkBoxFault(UInt16 data, int bit) {
             return !((data & (1 << bit)) == 0);
         }
-        
 
     }
     public class CPGetStartup
