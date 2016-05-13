@@ -119,7 +119,7 @@ namespace CPServer
                             this.cpGetStateData.cpSpace2 = arr[45];
                             this.cpGetStateData.cpChargePlug = arr[46];
                             this.cpGetStateData.cpSpace3 = arr[47];
-                            this.cpGetStateData.cpCurrentState = arr[48];
+                            this.cpGetStateData.cpOutState = arr[48];
 
                             this.cpGetStateData.cpFaultH = arr[49];
                             this.cpGetStateData.cpFaultL = arr[50];
@@ -274,6 +274,7 @@ namespace CPServer
     }
 
     public class chargePileDataPacketList {
+        
         public List<chargePileDataPacket> cpDataPacket = new List<chargePileDataPacket>();
 
         public chargePileDataPacket cpData = new chargePileDataPacket();
@@ -283,7 +284,6 @@ namespace CPServer
         private static int myProt = 8885;   //端口
         static Socket serverSocket;
         public chargePileDataPacketList() {
-
             try {
                 IPAddress ip = IPAddress.Parse("127.0.0.1");
                 serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -357,8 +357,9 @@ namespace CPServer
                         cpdeviceDataPacket.chargePileMachineAddress = cpdeviceDataPacket.chargePileData.cpAddress;
                         cpdeviceDataPacket.clientSocket = clientSocket;
                         Console.WriteLine("cpdeviceDataPacket-address:" + cpdeviceDataPacket.chargePileData.cpAddress);
-
-                        Console.WriteLine("list length" + cpDataPacket.Count);
+                        Console.WriteLine("voltage:" + cpdeviceDataPacket.chargePileData.cpGetStateData.cpVoltage);
+                        Console.WriteLine("Current:" + cpdeviceDataPacket.chargePileData.cpGetStateData.cpCurrent);
+                        //Console.WriteLine("list length" + cpDataPacket.Count);
                         if (false == updataDeviceList(cpdeviceDataPacket)) {
                             cpDataPacket.Add(cpdeviceDataPacket);
 
@@ -453,7 +454,6 @@ namespace CPServer
             Console.WriteLine("创建新的线程来接收数据，端口号为：" + port);
             while (true) {
                 try { // 通过clientSocket接收数据
-                    
                     if (mySocket == null) {
                         continue;
                     }
@@ -462,7 +462,8 @@ namespace CPServer
                     //Thread.Sleep(2000);
                     //continue;
                     int receiveNumber = mySocket.Receive(result);
-                    Console.WriteLine(receiveNumber);
+
+                    //Console.WriteLine("接收到了数据---"+ receiveNumber + "端口号：" + port);
                     if (receiveNumber == 0) {
                         continue;
                     }
@@ -475,11 +476,29 @@ namespace CPServer
                         Console.WriteLine(ex.Message);
                         Console.WriteLine("数组赋值错误！");
                     }
-                    chargePileDataPacket cpdeviceDataPacket = new chargePileDataPacket();
-                    cpdeviceDataPacket.chargePileData = cpdeviceDataPacket.chargePileData.packageParser(tempArray, receiveNumber);
 
+
+                    UInt32 addressH = (UInt32)((tempArray[2] << 24) | (tempArray[3] << 16)
+                                    | (tempArray[4] << 8) | (tempArray[5]));
+                    UInt32 addressL = (UInt32)((tempArray[6] << 24) | (tempArray[7] << 16)
+                                        | (tempArray[8] << 8) | (tempArray[9]));
+                    UInt64 cpAddress = ((UInt64)addressH) << 32 | addressL;
+                    Console.WriteLine("接收到了数据---" + cpAddress + "端口号：" + port);
+
+                    chargePileDataPacket cpdeviceDataPacket = null;
+                    for (int i = 0; i < cpDataPacket.Count; i++) {
+                        chargePileDataPacket data = cpDataPacket[i];
+                        if (data.chargePileMachineAddress == cpAddress) {
+                            cpdeviceDataPacket = data;
+                        }
+                    }
+                    if (cpdeviceDataPacket == null) {
+                        cpdeviceDataPacket = new chargePileDataPacket();
+                    }
+                    cpdeviceDataPacket.chargePileData = cpdeviceDataPacket.chargePileData.packageParser(tempArray, receiveNumber);
+                    Console.WriteLine("cpdeviceDataPacket-address:" + cpdeviceDataPacket.chargePileData.cpAddress + "端口号：" + port);
                     if (cpdeviceDataPacket.chargePileData != null) {
-                        Console.WriteLine("解析数据成功---机器地址为：" + cpData.chargePileData.cpAddress);
+                        //Console.WriteLine("解析数据成功---机器地址为：" + cpData.chargePileData.cpAddress);
 
                         //cpdeviceDataPacket.chargePileData = cpData.chargePileData;
                         cpdeviceDataPacket.isActive = true;
@@ -487,9 +506,11 @@ namespace CPServer
                         //cpdeviceDataPacket.chargePilePort = ((System.Net.IPEndPoint)myClientSocket.RemoteEndPoint).Port;
                         cpdeviceDataPacket.chargePileMachineAddress = cpdeviceDataPacket.chargePileData.cpAddress;
                         cpdeviceDataPacket.clientSocket = mySocket;
-                        Console.WriteLine("cpdeviceDataPacket-address:" + cpdeviceDataPacket.chargePileData.cpAddress);
 
-                        Console.WriteLine("list length" + cpDataPacket.Count);
+                        Console.WriteLine("voltage:" + cpdeviceDataPacket.chargePileData.cpGetStateData.cpVoltage);
+                        Console.WriteLine("Current:" + cpdeviceDataPacket.chargePileData.cpGetStateData.cpCurrent);
+                        //Console.WriteLine("list length" + cpDataPacket.Count);
+                        //Console.WriteLine("list length" + cpDataPacket.Count);
                         if (false == updataDeviceList(cpdeviceDataPacket)) {
                             cpDataPacket.Add(cpdeviceDataPacket);
 
@@ -500,10 +521,13 @@ namespace CPServer
                             //getInfoThread.Start(cpDataPacket);
                             Console.WriteLine("enter add data!!!");
                         }
-                        for (int i = 0; i < cpDataPacket.Count; i++) {
-                            Console.WriteLine("cpDataPacket-address:" + cpDataPacket[i].chargePileData.cpAddress);
-                        }
-                    }/**/
+                        //for (int i = 0; i < cpDataPacket.Count; i++) {
+                        //    Console.WriteLine("cpDataPacket-address:" + cpDataPacket[i].chargePileData.cpAddress);
+                        //}
+                    } else {
+                        Console.WriteLine("cpdeviceDataPacket 为 空");
+                    }
+                    /**/
                     //}
                 } catch (Exception ex) {
                     Console.WriteLine(ex.Message);
@@ -535,20 +559,24 @@ namespace CPServer
                 CPSendDataPackage sendDataPack = new CPSendDataPackage();
                 byte[] sendData = sendDataPack.sendDataPackage(0x23, myData.chargePileMachineAddress);
                 Socket soc = myData.clientSocket;
-                
-                
+                try {
+                    soc.Send(sendData, sendData.Length, 0);
+                } catch (Exception ex) {
+                    Console.WriteLine("发送数据错误！");
+                    soc.Close();
+                }
+                Thread.Sleep(100);
+                byte[] sendData1 = sendDataPack.sendDataPackage(0x25, myData.chargePileMachineAddress);
+                try {
+                    soc.Send(sendData1, sendData1.Length, 0);
+                } catch (Exception ex) {
+                    Console.WriteLine("发送数据错误！");
+                    soc.Close();
+                }
                 //this.sendDataToChargePile(0x23, myData);
                 //Thread.Sleep(100);
                 //this.sendDataToChargePile(0x25, myData);
                 //Thread.Sleep(100);
-                try {
-                    soc.Send(sendData, sendData.Length, 0);
-                } catch (Exception ex) {
-                    //Console.WriteLine(ex.Message);
-                    Console.WriteLine("发送数据错误！");
-                    //Thread.CurrentThread.Abort();
-                    soc.Close();
-                }
                 Thread.Sleep(3000);
             }
         }
@@ -594,6 +622,7 @@ namespace CPServer
             }
             return false;
         }
+        
         public void sendDataToChargePile(byte cmdCode, chargePileDataPacket data) {
             CPSendDataPackage sendDataPack = new CPSendDataPackage();
             byte[] sendData = sendDataPack.sendDataPackage(cmdCode, data.chargePileMachineAddress);
@@ -687,9 +716,396 @@ namespace CPServer
         //public IPAddress chargePileIPAddress = IPAddress.Parse("127.0.0.1");
         //public int chargePilePort = 0;
         public UInt64 chargePileMachineAddress = 0;
-        public CPBackDataParse chargePileData = new CPBackDataParse();
+        public CPBackDataParse chargePileData = new CPBackDataParse(); // 数据都在这里面
+
+        #region 数据包私有方法
+        // 数据包
+        /// <summary>
+        /// 采样信息
+        /// </summary>
+        private CPGetState.CPCurrentState _CurrentState;
+        private byte _CommState;
+        private float _CurrentSOC = 0.38f; // 初始值38%，一分钟增加1%，< 90%
+        private int _ChargeTime = 30;
+        private int _RemainTime = 40;// 步长为一分钟，< 10分钟，大于0分钟
+        private float _CurrentVOL = 560.5f;// 步长0.1V，< 750V
+        private float _CurrentCur = 87.5f; // 步长为0.1
+        /// <summary>
+        /// RT Info:_CurrentVOL,_CurrentCur
+        /// </summary>
+        private float _OutPower;// 输出功率，P= _CurrentVOL * _CurrentCur / 1000
+        private float _OutQuantity; // 输出电量，Q=P*T(T为小时)
+        private int _ACCTime = 30; // T初始30分钟，步长1分钟
+
+        /// <summary>
+        /// 故障信息
+        /// </summary>
+        private bool[] _CurrentAlarmInfo;// 里面存10种故障信息
+
+        /// <summary>
+        /// 费率信息
+        /// </summary>
+
+        private float _TotalQuantity; //总电量<100度
+        private float _TotalFee;      //总费用< 100元
+
+        private float _JianQ;      //尖
+        private float _JianPrice;  //1.2-1.3 元
+        private float _JianFee;
+
+        private float _fengQ;    //峰
+        private float _fengPrice;//1.0-1.1
+        private float _fengFee;
+
+        private float _PingQ;    //平
+        private float _PingPrice;//0.7-0.8
+        private float _PingFee;
+
+        private float _GUQ;   //谷
+        private float _GUPrice;//0.3-0.4
+        private float _GUFee;
+
+        /// <summary>
+        /// Battery array Info（option)
+        /// </summary>
+        /// 
+        private float _BatterySoc = 0.6f; //电池组SOC60%
+        private bool _BMSState = true;  //BMS状态正常
+        private float _PortVol = 538.80f;   //端电压  538.80  V
+        private int _CellNum = 0;   //单体数量0  个
+        private int _TempNum = 0;  //温度点数量0  个
+        private float _MaxVol = 3.921f;    //最高允许充电单体电压3.921  V
+        private float _MaxCTemp = 60.0f;   //最高允许充电温度 60 度
+
+        /// <summary>
+        /// Battery safty Info
+        /// </summary>
+        private float _CellMaxVol = 3.421f;  //单体最高电压3.412 V
+        private int _CellPos = 2;    //单体最高电压位置2 
+        private float _CellMinVol = 0.0f; //单体最低电压 0.000 V
+        private int _CellMinVolPos = 0; //单体最低电压位置0
+        private float _MaxTemp = 38.0f;  //最高温度 38 度
+        private float _MinTemp = 31.0f;  //最低温度31 度
+
+        /// <summary>
+        /// BMS alarm info
+        /// </summary>
+        private bool _VolDataAlarm = false;  //电压数据异常无故障
+        private bool _SampleVolFault = false; //电压采样故障
+        private bool _UvorOvAlarm = false;    //单体欠压过压报警
+        private bool _SystemParaAlarm = false; //系统参数报警
+        private bool _FanFailFault = false;    //风扇故障
+        private bool _SampleTempFault = false;  //温度采样错误
+        #endregion
+
+        #region 数据包接口
+        // 数据包
+        /// <summary>
+        /// 采样信息
+        /// </summary>
+        public CPGetState.CPCurrentState CurrentState {
+            get {
+                _CurrentState = chargePileData.cpGetStateData.cpCurrentSta;
+                return _CurrentState;
+            }
+        }
+        public byte CommState {
+            get {
+                _CommState = chargePileData.cpGetStateData.cpComState;
+                return _CommState;
+            }
+        }
+        public float CurrentSOC { // 初始值38%，一分钟增加1%，< 90%
+            get {
+                _CurrentSOC = ((float)chargePileData.cpGetStateData.cpSpace1) / 100;
+                if (_CurrentSOC > 0.9f) {
+                    _CurrentSOC = 0.9f;
+                }
+                return _CurrentSOC;
+            }
+        }
+        public int ChargeTime {
+            get {
+                _ChargeTime = (int)chargePileData.cpGetStateData.cpSpace2;
+                return _ChargeTime;
+            }
+        }
+        public int RemainTime {// 步长为一分钟，< 10分钟，大于0分钟
+            get {
+                _RemainTime = (int)chargePileData.cpGetStateData.cpSpace3;
+                return _RemainTime;
+            }
+        }
+        public float CurrentVOL {// 步长0.1V，< 750V
+            get {
+                _CurrentVOL = ((float)chargePileData.cpGetStateData.cpVoltage) / 100;
+                return _CurrentVOL;
+            }
+        }
+        public float CurrentCur { // 步长为0.1
+            get {
+                _CurrentCur = ((float)chargePileData.cpGetStateData.cpCurrent) / 100;
+                return _CurrentCur;
+            }
+        }
+        /// <summary>
+        /// RT Info:_CurrentVOL,_CurrentCur
+        /// </summary>
+        public float OutPower {// 输出功率，P= _CurrentVOL * _CurrentCur / 1000
+            get {
+                float voltage = ((float)chargePileData.cpGetStateData.cpVoltage) / 100;
+                float current = ((float)chargePileData.cpGetStateData.cpCurrent) / 100;
+                _OutPower = current * voltage / 1000;
+                return _OutPower;
+            }
+        }
+        public float OutQuantity {// 输出电量，Q=P*T(T为小时)
+            get {
+                float time = ((float)chargePileData.cpGetStateData.cpSpace2) / 60;
+                float voltage = ((float)chargePileData.cpGetStateData.cpVoltage) / 100;
+                float current = ((float)chargePileData.cpGetStateData.cpCurrent) / 100;
+                _OutQuantity = voltage * current / 1000 * time;
+                return _OutQuantity;
+            }
+        }
+        public int ACCTime { // T初始30分钟，步长1分钟
+            get {
+                _ACCTime = (int)chargePileData.cpGetStateData.cpSpace2;
+                return _ACCTime;
+            }
+        }
+
+        /// <summary>
+        /// 故障信息
+        /// </summary>
+        public bool[] CurrentAlarmInfo {// 里面存10种故障信息
+            get {
+                CPGetState state = chargePileData.cpGetStateData;
+                if (_CurrentAlarmInfo == null) {
+                    _CurrentAlarmInfo = new bool[10];
+                }
+                _CurrentAlarmInfo[0] = state.cpInOverVol;
+                _CurrentAlarmInfo[1] = state.cpOutOverVol;
+                _CurrentAlarmInfo[2] = state.cpInUnderVol;
+                _CurrentAlarmInfo[3] = state.cpOutUnderVol;
+                _CurrentAlarmInfo[4] = state.cpInOverCur;
+                _CurrentAlarmInfo[5] = state.cpOutOverCur;
+                _CurrentAlarmInfo[6] = state.cpInUnderCur;
+                _CurrentAlarmInfo[7] = state.cpOutUnderCur;
+                _CurrentAlarmInfo[8] = state.cpTempHigh;
+                _CurrentAlarmInfo[9] = state.cpOutShort;
+
+                return _CurrentAlarmInfo;
+            }
+        }
+
+        /// <summary>
+        /// 费率信息
+        /// </summary>
+
+        public float TotalQuantity { //总电量<100度
+            get {
+                _TotalQuantity = ((float)chargePileData.cpGetCurInfoData.cpChargeTotalElect) / 100;
+                if (_TotalQuantity > 100.0f) {
+                    _TotalQuantity = -1.0f;
+                }
+                return _TotalQuantity;
+            }
+        }
+        public float TotalFee {      //总费用< 100元
+            get {
+                _TotalFee = ((float)chargePileData.cpGetCurInfoData.cpChargeTotalPrice) / 100;
+                if (_TotalFee > 100.0f) {
+                    _TotalFee = -1.0f;
+                }
+                return _TotalFee;
+            }    
+        }
+        public float JianQ {    //尖
+            get {
+                _JianQ = ((float)chargePileData.cpGetCurInfoData.cpChargePointElect) / 100;
+                return _JianQ;
+            }
+        }
+        public float JianPrice {  //1.2-1.3 元
+            get {
+                _JianPrice = ((float)chargePileData.cpGetCurInfoData.cpPointElectPrice) / 100;
+                return _JianPrice;
+            }
+        }
+        public float JianFee {
+            get {
+                _JianFee = ((float)chargePileData.cpGetCurInfoData.cpPointCost) / 100;
+                return _JianFee;
+            }
+        }
+        public float fengQ {    //峰
+            get {
+                _fengQ = ((float)chargePileData.cpGetCurInfoData.cpChargePeakElect) / 100;
+                return _fengQ;
+            }
+        }
+        public float fengPrice { //1.0-1.1
+            get {
+                _fengPrice = ((float)chargePileData.cpGetCurInfoData.cpPeakElectPrice) / 100;
+                return _fengPrice;
+            }
+        }
+        public float fengFee {
+            get {
+                _fengFee = ((float)chargePileData.cpGetCurInfoData.cpPeakCost) / 100;
+                return _fengFee;
+            }
+        }
+
+        public float PingQ {   //平
+            get {
+                _fengFee = ((float)chargePileData.cpGetCurInfoData.cpChargeFlatElect) / 100;
+                return _PingQ;
+            }
+        }
+        public float PingPrice {//0.7-0.8
+            get {
+                _PingPrice = ((float)chargePileData.cpGetCurInfoData.cpFlatElectPrice) / 100;
+                return _PingPrice;
+            }
+        }
+        public float PingFee {
+            get {
+                _PingFee = ((float)chargePileData.cpGetCurInfoData.cpFlatCost) / 100;
+                return _PingFee;
+            }
+        }
+
+        public float GUQ {   //谷
+            get {
+                _GUQ = ((float)chargePileData.cpGetCurInfoData.cpChargeValleyElect) / 100; 
+                return _GUQ;
+            }
+        }
+        public float GUPrice {//0.3-0.4
+            get {
+                _GUPrice = ((float)chargePileData.cpGetCurInfoData.cpValleyElectPrice) / 100; 
+                return _GUPrice;
+            }
+        }
+        public float GUFee {
+            get {
+                _GUFee = ((float)chargePileData.cpGetCurInfoData.cpValleyCost) / 100; 
+                return _GUFee;
+            }
+        }
+
+        /// <summary>
+        /// Battery array Info（option)
+        /// </summary>
+        /// 
+        public float BatterySoc { //电池组SOC60%
+            get {
+                return _BatterySoc;
+            }
+        }
+        public bool BMSState {  //BMS状态正常
+            get {
+                return _BMSState;
+            }
+        }
+        public float PortVol {   //端电压  538.80  V
+            get {
+                return _PortVol;
+            }
+        }
+        public int CellNum {   //单体数量0  个
+            get {
+                return _CellNum;
+            }
+        }
+        public int TempNum {  //温度点数量0  个
+            get {
+                return _TempNum;
+            }
+        }
+        public float MaxVol {    //最高允许充电单体电压3.921  V
+            get {
+                return _MaxVol;
+            }
+        }
+        public float MaxCTemp {   //最高允许充电温度 60 度
+            get {
+                return _MaxCTemp;
+            }
+        }
+
+        /// <summary>
+        /// Battery safty Info
+        /// </summary>
+        public float CellMaxVol {  //单体最高电压3.412 V
+            get {
+                return _CellMaxVol;
+            }
+        }
+        public int CellPos {   //单体最高电压位置2 
+            get {
+                return _CellPos;
+            }
+        }
+        public float CellMinVol { //单体最低电压 0.000 V
+            get {
+                return _CellMinVol;
+            }
+        }
+        public int CellMinVolPos { //单体最低电压位置0
+            get {
+                return _CellMinVolPos;
+            }
+        }
+        public float MaxTemp {  //最高温度 38 度
+            get {
+                return _MaxTemp;
+            }
+        }
+        public float MinTemp {  //最低温度31 度
+            get {
+                return _MinTemp;
+            }
+        }
+
+        /// <summary>
+        /// BMS alarm info
+        /// </summary>
+        public bool VolDataAlarm {  //电压数据异常无故障
+            get {
+                return _VolDataAlarm;
+            }
+        }
+        public bool SampleVolFault { //电压采样故障
+            get {
+                return _SampleVolFault;
+            }
+        }
+        public bool UvorOvAlarm {   //单体欠压过压报警
+            get {
+                return _UvorOvAlarm;
+            }
+        }
+        public bool SystemParaAlarm { //系统参数报警
+            get {
+                return _SystemParaAlarm;
+            }
+        }
+        public bool FanFailFault {    //风扇故障
+            get {
+                return _FanFailFault;
+            }
+        }
+        public bool SampleTempFault {  //温度采样错误
+            get {
+                return _SampleTempFault;
+            }
+        }
+        #endregion
         //public Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        public Socket clientSocket =  null;
+        public Socket clientSocket = null;
         public chargePileDataPacket() {
             //Console.WriteLine("创建类chargePileDataPacket成功");
         }
@@ -728,12 +1144,12 @@ namespace CPServer
         public UInt32 cpValleyElect = 0;
 
         public byte cpEmergencyBtn = 0;  // 0x00:normal;0x01:push down
-        public byte cpSpace1 = 0;        // space data
+        public byte cpSpace1 = 0;        // space data---soc数
         public byte cpMeterState = 0;    // 0x00 normal;0x01:fault
-        public byte cpSpace2 = 0;        // space data
+        public byte cpSpace2 = 0;        // space data---charge time
         public byte cpChargePlug = 0;    // 0x00:normal;0x01:fault
-        public byte cpSpace3 = 0;        // space data
-        public byte cpCurrentState = 0;  // 0x00:normal;0x01:fault
+        public byte cpSpace3 = 0;        // space data --- left time
+        public byte cpOutState = 0;  // 0x00:normal;0x01:fault
 
         private byte _cpState = 0;
         private CPCurrentState _cpCurrentSta = CPCurrentState.FreeState;
@@ -771,7 +1187,7 @@ namespace CPServer
                 }
             }
         }
-        private CPCurrentState cpCurrentSta {
+        public CPCurrentState cpCurrentSta {
             get {
                 return _cpCurrentSta;
             }
@@ -793,7 +1209,7 @@ namespace CPServer
         private UInt16 fault {
             get {
                 _fault = (UInt16)(((UInt16)_cpFaultH) << 8 | _cpFaultL);
-                Console.WriteLine("get fault:" + _fault);
+                //Console.WriteLine("get fault:" + _fault);
                 return _fault;
             }
             set {
