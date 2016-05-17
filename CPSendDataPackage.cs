@@ -362,10 +362,40 @@ namespace CPServer
 
     public class CPSetSendDataRate
     {
-        public UInt32 cpPointPrice = 0;
-        public UInt32 cpPeakPrice = 0;
-        public UInt32 cpFlatPrice = 0;
-        public UInt32 cpVallPrice = 0;
+        private UInt32 _cpPointPrice = 0;
+        private UInt32 _cpPeakPrice = 0;
+        private UInt32 _cpFlatPrice = 0;
+        private UInt32 _cpVallPrice = 0;
+
+        public double cpPointPriceD = 0.0;
+        public double cpPeakPriceD = 0.0;
+        public double cpFlatPriceD = 0.0;
+        public double cpVallPriceD = 0.0;
+
+        public UInt32 cpPointPrice {
+            get {
+                _cpPointPrice = (UInt32)(cpPointPriceD * 100);
+                return _cpPointPrice;
+            }
+        }
+        public UInt32 cpPeakPrice {
+            get {
+                _cpPeakPrice = (UInt32)(cpPeakPriceD * 100);
+                return _cpPeakPrice;
+            }
+        }
+        public UInt32 cpFlatPrice {
+            get {
+                _cpFlatPrice = (UInt32)(cpFlatPriceD * 100);
+                return _cpFlatPrice;
+            }
+        }
+        public UInt32 cpVallPrice {
+            get {
+                _cpVallPrice = (UInt32)(cpVallPriceD * 100);
+                return _cpVallPrice;
+            }
+        }
     }
 
     public class CPSetSendDataTime
