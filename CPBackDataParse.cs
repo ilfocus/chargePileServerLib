@@ -70,8 +70,10 @@ namespace CPServer
                         this.classType = BackDataType.HeartFrameType;
                         if (arr[13] == 0x00) {
                             this.cpGetHeartData.cpHeartFrameExecuteResult = true;
+                            this.cpGetStateData.cpComState = 0x01;
                         } else {
                             this.cpGetHeartData.cpHeartFrameExecuteResult = false;
+                            this.cpGetStateData.cpComState = 0x00;
                         }
                         break;
                     }
@@ -124,7 +126,7 @@ namespace CPServer
                             this.cpGetStateData.cpFaultH = arr[49];
                             this.cpGetStateData.cpFaultL = arr[50];
                             this.cpGetStateData.cpState = arr[51];
-                            this.cpGetStateData.cpComState = arr[52];
+                            //this.cpGetStateData.cpComState = arr[52];
 
                             
                         } else {
@@ -414,6 +416,8 @@ namespace CPServer
                 Thread receiveThread = new Thread(ReceiveMessage);
                 receiveThread.IsBackground = true;
                 receiveThread.Start(cpData.clientSocket);
+
+                //cpData.clientSocket.
             }
 
         }
