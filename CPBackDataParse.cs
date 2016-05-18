@@ -34,9 +34,9 @@ namespace CPServer
 
         
         private static byte[] result = new byte[1024];
-        private static int myProt = 8885;   //端口
-        static Socket serverSocket;
-        static Socket clientSocket;/**/
+        //private static int myProt = 8885;   //端口
+        //static Socket serverSocket;
+        //static Socket clientSocket;/**/
         public CPBackDataParse() {
         }
         /*
@@ -221,7 +221,7 @@ namespace CPServer
         public Socket clientSocket;
 
         private static byte[] result = new byte[1024];
-        private static int myProt = 8885;   //端口
+        //private static int myProt = 8885;   //端口
         static Socket serverSocket;
 
         public ChargePileDevice() {
@@ -568,7 +568,7 @@ namespace CPServer
 
                 }
             } catch (Exception ex) {
-                Console.WriteLine("heartFrame---发送数据错误！");
+                Console.WriteLine("heartFrame---发送数据错误！" + ex.Message);
                 myData = null;
             }
         }
@@ -591,7 +591,7 @@ namespace CPServer
                     byte[] sendData1 = sendDataPack.sendDataPackage(0x25, myData.chargePileMachineAddress);
                     soc.Send(sendData1, sendData1.Length, 0);
                 } catch (Exception ex) {
-                    Console.WriteLine("state info --- 发送数据错误！");
+                    Console.WriteLine("state info --- 发送数据错误！" + ex.Message);
                     myData = null;
                     break;
                 }
