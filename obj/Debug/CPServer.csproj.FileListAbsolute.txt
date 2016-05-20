@@ -15,4 +15,3 @@ Y:\chargePile\chargePileServerLib\bin\Debug\CPServer.pdb
 Y:\chargePile\chargePileServerLib\obj\Debug\ResolveAssemblyReference.cache
 Y:\chargePile\chargePileServerLib\obj\Debug\CPServer.dll
 Y:\chargePile\chargePileServerLib\obj\Debug\CPServer.pdb
-E:\充电桩\ChargePile\chargePileServerLib\obj\Debug\CPServer.csprojResolveAssemblyReference.cache

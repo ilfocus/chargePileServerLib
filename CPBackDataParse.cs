@@ -500,6 +500,7 @@ namespace CPServer
                         chargePileDataPacket data = cpDataPacket[i];
                         if (data.chargePileMachineAddress == cpAddress) {
                             cpdeviceDataPacket = data;
+                            Console.WriteLine("更新数据---" + cpAddress);
                         }
                     }
                     if (cpdeviceDataPacket == null) {

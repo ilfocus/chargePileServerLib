@@ -81,6 +81,9 @@ namespace CPServer
 
             return bRequestCmd;
         }
+        
+        
+        
         #endregion
         #region 充电桩启停数据打包
         public byte[] sendCPStartupPackage(byte cmd,byte para) {
