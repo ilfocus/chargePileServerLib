@@ -43,7 +43,7 @@
     <Compile Include="CPBackDataParse.cs" />
     <Compile Include="CPDataCheck.cs" />
     <Compile Include="CPSendDataPackage.cs" />
-    <Compile Include="test.cs" />
+    <Compile Include="serialPortClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
