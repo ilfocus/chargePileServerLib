@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -326,10 +326,10 @@ namespace CPServer
                 #endregion
 
                 #region 定时器事件---发送心跳报文
-//                 System.Timers.Timer heartFrameTimer = new System.Timers.Timer();       //System.Timers，不是form的  
-//                 heartFrameTimer.Elapsed += new ElapsedEventHandler(HeartFrameEvent);
-//                 heartFrameTimer.Interval = 10000;    // 10s  
-//                 heartFrameTimer.Enabled = true;
+                System.Timers.Timer heartFrameTimer = new System.Timers.Timer();       //System.Timers，不是form的  
+                heartFrameTimer.Elapsed += new ElapsedEventHandler(HeartFrameEvent);
+                heartFrameTimer.Interval = 10000;    // 10s  
+                heartFrameTimer.Enabled = true;
                 #endregion
 
                 #region 定时器事件---发送获取状态命令报文
@@ -340,10 +340,10 @@ namespace CPServer
                 #endregion
 
                 #region 定时器事件---发送获取当前信息报文
-//                 System.Timers.Timer CPCurrentInfoTimer = new System.Timers.Timer();       //System.Timers，不是form的  
-//                 CPCurrentInfoTimer.Elapsed += new ElapsedEventHandler(CPCurrentInfoEvent);
-//                 CPCurrentInfoTimer.Interval = 3000;    // 3s 
-//                 CPCurrentInfoTimer.Enabled = true;
+                System.Timers.Timer CPCurrentInfoTimer = new System.Timers.Timer();       //System.Timers，不是form的  
+                CPCurrentInfoTimer.Elapsed += new ElapsedEventHandler(CPCurrentInfoEvent);
+                CPCurrentInfoTimer.Interval = 3500;    // 3s 
+                CPCurrentInfoTimer.Enabled = true;
                 #endregion 
 
             } else if (method == ComMethod.TcpIp) {
@@ -367,7 +367,7 @@ namespace CPServer
 
             if (cpData.chargePileMachineAddress != 0) {
                 this.sendDataToChargePile(ComMethod.SerialPort, 0x20, cpData.chargePileMachineAddress);
-                Console.WriteLine("-----[发送心跳包]-----成功");
+                //Console.WriteLine("-----[发送心跳包]-----成功");
             }
             
         }
@@ -375,14 +375,14 @@ namespace CPServer
         {
             if (cpData.chargePileMachineAddress != 0) {
                 this.sendDataToChargePile(ComMethod.SerialPort, 0x23, cpData.chargePileMachineAddress);
-                Console.WriteLine("-----[发送充电桩状态包]-----成功");
+                //Console.WriteLine("-----[发送充电桩状态包]-----成功");
             }
         }
         private void CPCurrentInfoEvent(object source, ElapsedEventArgs e) 
         {
             if (cpData.chargePileMachineAddress != 0) {
                 this.sendDataToChargePile(ComMethod.SerialPort, 0x25, cpData.chargePileMachineAddress);
-                Console.WriteLine("-----[发送充电桩当前信息包]-----成功");
+                //Console.WriteLine("-----[发送充电桩当前信息包]-----成功");
             }
         }
         private void TimedEvent(object source, ElapsedEventArgs e) 
@@ -985,6 +985,7 @@ namespace CPServer
         }
         #endregion
     }
+    //  
     public class chargePileDataPacket { 
         public bool isActive = false;
         //public IPAddress chargePileIPAddress = IPAddress.Parse("127.0.0.1");
