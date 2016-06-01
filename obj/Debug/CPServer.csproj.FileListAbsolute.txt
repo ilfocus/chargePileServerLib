@@ -15,3 +15,4 @@ Y:\chargePile\chargePileServerLib\bin\Debug\CPServer.pdb
 Y:\chargePile\chargePileServerLib\obj\Debug\ResolveAssemblyReference.cache
 Y:\chargePile\chargePileServerLib\obj\Debug\CPServer.dll
 Y:\chargePile\chargePileServerLib\obj\Debug\CPServer.pdb
+Y:\chargePile\chargePileServerLib\bin\Debug\Bmob-Windows.dll

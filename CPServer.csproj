@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Bmob-Windows">
+      <HintPath>..\bmob-demo-csharp-master\bmob-demo-csharp-master\examples\bmob-desktop-demo\lib\Bmob-Windows.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

@@ -1072,7 +1072,6 @@ namespace CPServer
         private bool _FanFailFault = false;    //风扇故障
         private bool _SampleTempFault = false;  //温度采样错误
         #endregion
-
         #region 数据包接口
         // 数据包
         /// <summary>
@@ -1383,7 +1382,6 @@ namespace CPServer
             }
         }
         #endregion
-        //public Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         public Socket clientSocket = null;
         public chargePileDataPacket() {
             //Console.WriteLine("创建类chargePileDataPacket成功");
